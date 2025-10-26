@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Property Management System</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="container">
+    <h1>🏠 Property Management System</h1>
+
+    <form id="propertyForm">
+      <input type="text" id="address" placeholder="Property Address" required>
+      <input type="text" id="owner" placeholder="Owner Name" required>
+      <input type="number" id="price" placeholder="Price (₹)" required>
+      <input type="text" id="status" placeholder="Status (e.g., Available)" required>
+      <button type="submit">➕ Add Property</button>
+    </form>
+
+    <h2>📋 Listed Properties</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Address</th>
+          <th>Owner</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="propertyTable"></tbody>
+    </table>
+  </div>
+
+  <script>
+    async function loadProperties() {
+      const res = await fetch('/properties');
+      const properties = await res.json();
+      const table = document.getElementById("propertyTable");
+      table.innerHTML = '';
+      properties.forEach(p => {
+        table.innerHTML += `
+          <tr>
+            <td>${p[0]}</td>
+            <td>${p[1]}</td>
+            <td>${p[2]}</td>
+            <td>₹${p[3]}</td>
+            <td>${p[4]}</td>
+            <td><button class="delete-btn" onclick="deleteProperty(${p[0]})">🗑️ Delete</button></td>
+          </tr>`;
+      });
+    }
+
+    document.getElementById("propertyForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        address: document.getElementById("address").value,
+        owner: document.getElementById("owner").value,
+        price: document.getElementById("price").value,
+        status: document.getElementById("status").value
+      };
+
+      await fetch("/add", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+
+      document.getElementById("propertyForm").reset();
+      loadProperties();
+    });
+
+    async function deleteProperty(id) {
+      await fetch(`/delete/${id}`, { method: "DELETE" });
+      loadProperties();
+    }
+
+    loadProperties();
+  </script>
+</body>
+</html>
